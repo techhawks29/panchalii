@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the velvet curtain the Flutter entry animation starts on -->
+    <color name="entry_velvet">#36131A</color>
+</resources>

@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  /* Panchalii — dark forest green + champagne gold (matches the store and app) */
+  --color-page:      #111b11;  /* page background */
+  --color-sidebar:   #0c150c;  /* sidebar / darkest */
+  --color-card:      #182618;  /* raised surfaces */
+  --color-primary:   #c9a96e;  /* gold accent */
+  --color-primary-light: #dec48a;
+  --color-ink:       #0f1a0f;  /* text on gold */
+
+  /* Semantic names the pages already use, remapped for the dark theme */
+  --color-secondary: #f5f0e8;  /* main text (cream) */
+  --color-tertiary:  #b8a98a;  /* muted text */
+  --color-muted:     #213321;  /* subtle surface inside cards */
+  --color-border:    rgba(201, 169, 110, 0.2);
+  --color-error:     #e5484d;
+  --color-success:   #3dd68c;
+  --color-warning:   #f5b544;
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Instrument Sans", sans-serif;
+  --radius-full: 9999px;
+}
+
+@layer base {
+  html { color-scheme: dark; }
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-page);
+    color: var(--color-secondary);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0.01em; }
+  ::selection { background: rgba(201, 169, 110, 0.3); }
+  select option { background: var(--color-card); color: var(--color-secondary); }
+  * { scrollbar-color: rgba(201, 169, 110, 0.25) transparent; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-primary text-ink text-xs font-semibold uppercase tracking-[0.18em] px-6 py-3 hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 border border-primary text-primary text-xs font-semibold uppercase tracking-[0.18em] px-6 py-3 hover:bg-primary hover:text-ink transition-colors disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 text-tertiary text-xs font-semibold uppercase tracking-[0.15em] px-4 py-2.5 hover:text-primary hover:bg-white/[0.03] transition-colors;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 border border-error/60 text-error text-xs font-semibold uppercase tracking-[0.15em] px-5 py-2.5 hover:bg-error/10 transition-colors;
+  }
+  .card {
+    @apply bg-card border border-border p-6;
+  }
+  .input {
+    @apply w-full bg-white/[0.03] border border-border px-4 py-2.5 text-sm text-secondary placeholder:text-tertiary/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 transition-colors;
+  }
+  .label {
+    @apply block text-[10px] font-semibold uppercase tracking-[0.2em] text-tertiary mb-2;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider;
+  }
+  .table-row-hover {
+    @apply hover:bg-white/[0.03] transition-colors;
+  }
+  .eyebrow {
+    @apply text-[10px] font-semibold uppercase tracking-[0.3em] text-primary;
+  }
+  .skeleton {
+    @apply bg-muted animate-pulse;
+  }
+  .stat-card {
+    /* Tailwind v4 can't @apply another component class, so this repeats .card */
+    @apply bg-card border border-border p-6 flex flex-col gap-1;
+  }
+}

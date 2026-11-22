@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+@theme {
+  /* Panchalii — Luxury Indian Fashion (dark forest green + gold) */
+  --color-bg:          #192619;   /* deep forest green */
+  --color-bg-dark:     #0F1A0F;   /* darkest green — nav / footer */
+  --color-bg-card:     #1E301E;   /* elevated surface */
+  --color-bg-light:    #F5F0E8;   /* cream — light sections */
+  --color-gold:        #C9A96E;   /* champagne gold — primary accent */
+  --color-gold-light:  #DEC48A;   /* hover gold */
+  --color-cream:       #F5F0E8;   /* warm cream text on dark */
+  --color-cream-muted: #B8A98A;   /* muted cream / secondary text */
+  --color-border:      rgba(201,169,110,0.25);  /* subtle gold border */
+  --color-border-gold: rgba(201,169,110,0.6);   /* visible gold border */
+  --color-error:       #E5484D;   /* readable on dark green */
+  --color-success:     #22C55E;
+
+  /* Keep legacy names so existing components degrade gracefully */
+  --color-primary:   #C9A96E;
+  --color-secondary: #192619;
+  --color-tertiary:  #B8A98A;
+  --color-muted:     #1E301E;
+  --color-surface:   #192619;
+  --color-on-surface:#F5F0E8;
+  --color-neutral:   #F5F0E8;
+
+  --font-display: "Cormorant Garamond", "Georgia", serif;
+  --font-body:    "Instrument Sans", sans-serif;
+
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   12px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+    color: var(--color-cream);
+    background-color: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: var(--color-cream);
+  }
+
+  ::selection {
+    background: rgba(201,169,110,0.3);
+  }
+}
+
+@layer components {
+  /* Gold outline button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 border border-gold text-gold font-body font-medium text-sm uppercase tracking-widest px-8 py-3 transition-all hover:bg-gold hover:text-bg-dark;
+  }
+
+  /* Dark filled button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-gold text-bg-dark font-body font-semibold text-sm uppercase tracking-widest px-8 py-3 transition-all hover:bg-gold-light;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-1 text-cream-muted text-sm uppercase tracking-widest hover:text-gold transition-colors;
+  }
+
+  .card {
+    @apply bg-bg-card border border-[rgba(201,169,110,0.2)] p-6;
+  }
+
+  .input {
+    @apply bg-transparent border border-[rgba(201,169,110,0.4)] px-4 py-3 text-cream placeholder-cream-muted/50 focus:outline-none focus:border-gold w-full font-body text-sm;
+  }
+
+  .chip {
+    @apply text-cream-muted text-xs uppercase tracking-widest px-3 py-1;
+  }
+
+  .section {
+    @apply py-20 px-6 max-w-7xl mx-auto;
+  }
+
+  .section-dark {
+    @apply py-20 px-6 max-w-7xl mx-auto bg-bg;
+  }
+
+  .gold-divider {
+    @apply block w-12 h-px bg-gold mx-auto my-4;
+  }
+
+  .label-eyebrow {
+    @apply text-gold text-xs uppercase tracking-[0.3em] font-body font-medium;
+  }
+
+  .skeleton {
+    @apply bg-bg-card animate-pulse;
+  }
+}
+
+/* ── Entry curtain: wine velvet parts fold by fold, logo flies into the header ── */
+.entry-skip .entry-curtain { display: none; }
+
+.entry-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  cursor: pointer;
+  background: transparent;
+}
+.entry-curtain__fold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 22%, transparent 68%, rgba(0, 0, 0, 0.6) 100%),
+    linear-gradient(90deg, #1c080b 0%, #34121a 14%, #4f1f27 38%, #5b2a30 50%, #46191f 66%, #2a0d13 86%, #18070a 100%);
+  will-change: transform, opacity;
+}
+.entry-curtain__logo {
+  position: absolute;
+  z-index: 200;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  transform-origin: center;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.entry-curtain.is-playing .entry-curtain__logo {
+  animation: entry-logo-in 0.55s ease-out forwards;
+}
+.entry-landed .entry-curtain__logo { opacity: 0 !important; transition: opacity 0.12s; }
+.entry-curtain.is-playing .entry-shine {
+  animation: entry-shine 0.75s 0.45s ease-in-out forwards;
+}
+.entry-curtain.is-playing .entry-curtain__fold {
+  animation: entry-fold-open 1.5s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+  animation-delay: calc(1300ms + var(--delay));
+}
+
+@keyframes entry-logo-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes entry-shine {
+  from { transform: skewX(-18deg) translateX(0); }
+  to   { transform: skewX(-18deg) translateX(560px); }
+}
+@keyframes entry-fold-open {
+  0%   { transform: translateX(0) scaleX(1); opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateX(var(--dx)) scaleX(0.6); opacity: 0; }
+}
+
+/* Header sits on top of the curtain while it plays, like the reference */
+html.entry-playing header {
+  z-index: 110;
+  background-color: transparent;
+  border-color: transparent;
+}
+html.entry-playing header .entry-fade {
+  opacity: 0;
+  animation: entry-fade-in 0.5s 1.2s ease-out forwards;
+}
+html.entry-playing:not(.entry-landed) [data-entry-logo] { opacity: 0; }
+@keyframes entry-fade-in { to { opacity: 1; } }
+
+/* Hero copy slides in from the left once the curtain has parted */
+html.entry-playing:not(.entry-reveal) .hero-copy { opacity: 0; transform: translateX(-48px); }
+html.entry-playing.entry-reveal .hero-copy { animation: hero-copy-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes hero-copy-in {
+  from { opacity: 0; transform: translateX(-48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
