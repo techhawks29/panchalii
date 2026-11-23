@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apiPost, apiGet } from '../api';
+import { useAuthStore } from './auth.store';
 
 export interface CartProduct {
   _id: string;
@@ -68,23 +69,29 @@ export const useCartStore = create<CartState>()(
         set({ items: res.data.items });
       },
 
+      // The server cart is the source of truth: it carries current names and
+      // prices, so admin edits and price changes reach the bag.
       loadCart: async () => {
         const { guestToken } = get();
-        if (!guestToken) return;
+        const signedIn = useAuthStore.getState().isAuthenticated;
         try {
-          const res = await apiGet<{ data: { items: CartItem[] } }>(`/public/cart/${guestToken}`);
-          set({ items: res.data?.items || [] });
-        } catch { /* silent */ }
+          let items: CartItem[] | undefined;
+          if (signedIn) {
+            const res = guestToken
+              ? await apiPost<{ data: { items: CartItem[] } }>('/me/cart/merge', { guestToken })
+              : await apiGet<{ data: { items: CartItem[] } }>('/me/cart');
+            items = res.data?.items;
+            set({ guestToken: null });
+          } else if (guestToken) {
+            items = (await apiGet<{ data: { items: CartItem[] } }>(`/public/cart/${guestToken}`)).data?.items;
+          } else {
+            return;
+          }
+          set({ items: (items || []).filter((i) => i.product?._id) });
+        } catch { /* keep the local copy if the network fails */ }
       },
 
-      mergeCart: async () => {
-        const { guestToken } = get();
-        if (!guestToken) return;
-        try {
-          const res = await apiPost<{ data: { items: CartItem[] } }>('/me/cart/merge', { guestToken });
-          set({ items: res.data?.items || [], guestToken: null });
-        } catch { /* silent */ }
-      },
+      mergeCart: () => get().loadCart(),
 
       clearCart: () => set({ items: [], guestToken: null }),
 
@@ -97,3 +104,10 @@ export const useCartStore = create<CartState>()(
     { name: 'panchalii-cart', partialize: (s: CartState) => ({ items: s.items, guestToken: s.guestToken }) }
   )
 );
+
+// Signing out must not leave the previous customer's bag in this browser.
+if (typeof window !== 'undefined') {
+  useAuthStore.subscribe((state, prev) => {
+    if (prev.isAuthenticated && !state.isAuthenticated) useCartStore.getState().clearCart();
+  });
+}

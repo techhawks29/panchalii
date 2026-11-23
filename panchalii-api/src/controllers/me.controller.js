@@ -2,6 +2,7 @@ const httpStatus = require('http-status');
 const User = require('../models/user.model');
 const Address = require('../models/address.model');
 const Order = require('../models/order.model');
+const Cart = require('../models/cart.model');
 const Wishlist = require('../models/wishlist.model');
 const Wallet = require('../models/wallet.model');
 const Notification = require('../models/notification.model');
@@ -226,6 +227,7 @@ const verifyPayment = async (req, res, next) => {
       { new: true }
     );
     if (!order) throw new ApiError(httpStatus.NOT_FOUND, 'Order not found');
+    await Cart.updateOne({ user: req.user._id }, { $set: { items: [] } });
 
     const user = await User.findById(req.user._id);
     if (user?.email) emailService.sendOrderConfirmation(user.email, order).catch(() => {});

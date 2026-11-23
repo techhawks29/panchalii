@@ -1,5 +1,6 @@
 const httpStatus = require('http-status');
 const Order = require('../models/order.model');
+const Cart = require('../models/cart.model');
 const razorpayService = require('../services/razorpay.service');
 
 const handleRazorpayWebhook = async (req, res) => {
@@ -22,7 +23,7 @@ const handleRazorpayWebhook = async (req, res) => {
       const razorpayOrderId = payload?.order?.entity?.id || payload?.payment?.entity?.order_id;
       const razorpayPaymentId = payload?.payment?.entity?.id;
       if (razorpayOrderId) {
-        await Order.findOneAndUpdate(
+        const paid = await Order.findOneAndUpdate(
           { 'payment.razorpayOrderId': razorpayOrderId, 'payment.status': 'pending' },
           {
             status: 'confirmed',
@@ -31,6 +32,7 @@ const handleRazorpayWebhook = async (req, res) => {
             'payment.paidAt': new Date(),
           }
         );
+        if (paid) await Cart.updateOne({ user: paid.user }, { $set: { items: [] } });
       }
     } else if (event === 'payment.failed') {
       const razorpayOrderId = payload?.payment?.entity?.order_id;

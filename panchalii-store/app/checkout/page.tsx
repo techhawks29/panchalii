@@ -24,7 +24,9 @@ export default function CheckoutPage() {
   const qc = useQueryClient();
   const ready = useAuthReady();
   const { isAuthenticated, user } = useAuthStore();
-  const { items, subtotal, itemCount, clearCart } = useCartStore();
+  const { items, subtotal, itemCount, clearCart, loadCart } = useCartStore();
+  // Show current prices before paying; the server charges from the catalogue anyway
+  useEffect(() => { loadCart(); }, [loadCart]);
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);

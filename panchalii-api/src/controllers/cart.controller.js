@@ -4,6 +4,14 @@ const Product = require('../models/product.model');
 const { v4: uuid } = require('uuid');
 const ApiError = require('../utils/ApiError');
 
+// Never query with a missing guestToken: Mongoose drops undefined filters and
+// { guestToken: null } matches every signed-in user's cart.
+const cartFilter = (req, guestToken) => {
+  if (req.user?._id) return { user: req.user._id };
+  if (typeof guestToken === 'string' && guestToken) return { guestToken };
+  return null;
+};
+
 const getPopulatedCart = (cart) =>
   Cart.findById(cart._id).populate({ path: 'items.product', select: 'name price mrp images slug inStock' }).lean();
 
@@ -12,12 +20,12 @@ const addToCart = async (req, res, next) => {
   try {
     const { productId, qty = 1, guestToken } = req.body;
     const userId = req.user?._id;
+    const filter = cartFilter(req, guestToken);
     const product = await Product.findById(productId);
     if (!product || !product.isActive) throw new ApiError(httpStatus.NOT_FOUND, 'Product not found');
     if (!product.inStock) throw new ApiError(httpStatus.BAD_REQUEST, 'Product is out of stock');
 
-    const filter = userId ? { user: userId } : { guestToken };
-    let cart = await Cart.findOne(filter);
+    let cart = filter ? await Cart.findOne(filter) : null;
     if (!cart) {
       cart = new Cart(userId ? { user: userId } : { guestToken: guestToken || uuid() });
     }
@@ -36,9 +44,8 @@ const addToCart = async (req, res, next) => {
 const updateCart = async (req, res, next) => {
   try {
     const { productId, qty, guestToken } = req.body;
-    const userId = req.user?._id;
-    const filter = userId ? { user: userId } : { guestToken };
-    const cart = await Cart.findOne(filter);
+    const filter = cartFilter(req, guestToken);
+    const cart = filter && await Cart.findOne(filter);
     if (!cart) throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
 
     if (qty <= 0) {
@@ -57,9 +64,8 @@ const updateCart = async (req, res, next) => {
 const removeFromCart = async (req, res, next) => {
   try {
     const { productId, guestToken } = req.body;
-    const userId = req.user?._id;
-    const filter = userId ? { user: userId } : { guestToken };
-    const cart = await Cart.findOne(filter);
+    const filter = cartFilter(req, guestToken);
+    const cart = filter && await Cart.findOne(filter);
     if (!cart) throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
     cart.items = cart.items.filter((i) => String(i.product) !== String(productId));
     await cart.save();
@@ -71,9 +77,8 @@ const removeFromCart = async (req, res, next) => {
 // GET /v1/public/cart/:guestToken  or  GET /v1/me/cart
 const getCart = async (req, res, next) => {
   try {
-    const userId = req.user?._id;
-    const guestToken = req.params.guestToken || req.query.guestToken;
-    const filter = userId ? { user: userId } : { guestToken };
+    const filter = cartFilter(req, req.params.guestToken || req.query.guestToken);
+    if (!filter) return res.json({ success: true, data: { items: [] } });
     const cart = await Cart.findOne(filter)
       .populate({ path: 'items.product', select: 'name price mrp images slug inStock' })
       .lean();
@@ -86,10 +91,14 @@ const mergeCart = async (req, res, next) => {
   try {
     const userId = req.user._id;
     const { guestToken } = req.body;
-    const guestCart = await Cart.findOne({ guestToken });
-    if (!guestCart || !guestCart.items.length) return res.json({ success: true, message: 'Nothing to merge' });
+    const guestCart = typeof guestToken === 'string' && guestToken
+      ? await Cart.findOne({ guestToken, user: { $exists: false } })
+      : null;
 
     let userCart = await Cart.findOne({ user: userId });
+    if (!guestCart || !guestCart.items.length) {
+      return res.json({ success: true, data: userCart ? await getPopulatedCart(userCart) : { items: [] } });
+    }
     if (!userCart) userCart = new Cart({ user: userId, items: [] });
 
     for (const guestItem of guestCart.items) {

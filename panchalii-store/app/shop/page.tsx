@@ -70,7 +70,7 @@ function ShopContent() {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => apiGet<{ data: Category[] }>('/public/categories').then((r) => r.data.filter((c) => !c.parentCategory)),
-    staleTime: 5 * 60_000,
+    staleTime: 60_000,
   });
 
   const setParam = (key: string, value: string) => {

@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -10,7 +11,8 @@ const FREE_SHIPPING = 999;
 const SHIPPING_FEE = 99;
 
 export default function CartPage() {
-  const { items, updateQty, removeItem, subtotal, itemCount } = useCartStore();
+  const { items, updateQty, removeItem, subtotal, itemCount, loadCart } = useCartStore();
+  useEffect(() => { loadCart(); }, [loadCart]);
   const total = subtotal();
   const count = itemCount();
   const shipping = total >= FREE_SHIPPING ? 0 : SHIPPING_FEE;

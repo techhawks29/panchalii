@@ -10,6 +10,7 @@ const Review = require('../models/review.model');
 const Notification = require('../models/notification.model');
 const cloudinaryService = require('../services/cloudinary.service');
 const { paginate } = require('../utils/paginate');
+const { revalidateStorefront } = require('../services/storefront.service');
 const ApiError = require('../utils/ApiError');
 const redis = require('../config/redis');
 
@@ -35,6 +36,7 @@ const createProduct = async (req, res, next) => {
     const product = await Product.create(data);
     await redis.delByPattern('cache:/v1/public/products*');
     await redis.delByPattern('cache:/v1/public/settings*');
+    revalidateStorefront();
     res.status(httpStatus.CREATED).json({ success: true, data: product });
   } catch (err) { next(err); }
 };
@@ -45,6 +47,7 @@ const updateProduct = async (req, res, next) => {
     if (!product) throw new ApiError(httpStatus.NOT_FOUND, 'Product not found');
     await redis.delByPattern('cache:/v1/public/products*');
     await redis.del(`cache:/v1/public/products/${product.slug}`);
+    revalidateStorefront();
     res.json({ success: true, data: product });
   } catch (err) { next(err); }
 };
@@ -53,6 +56,7 @@ const deleteProduct = async (req, res, next) => {
   try {
     await Product.findByIdAndUpdate(req.params.id, { isActive: false });
     await redis.delByPattern('cache:/v1/public/products*');
+    revalidateStorefront();
     res.json({ success: true, message: 'Product deactivated' });
   } catch (err) { next(err); }
 };
@@ -80,6 +84,7 @@ const createCategory = async (req, res, next) => {
     const slug = slugify(name, { lower: true, strict: true });
     const category = await Category.create({ name, slug, ...rest });
     await redis.delByPattern('cache:/v1/public/categories*');
+    revalidateStorefront();
     res.status(httpStatus.CREATED).json({ success: true, data: category });
   } catch (err) { next(err); }
 };
@@ -89,6 +94,7 @@ const updateCategory = async (req, res, next) => {
     const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!category) throw new ApiError(httpStatus.NOT_FOUND, 'Category not found');
     await redis.delByPattern('cache:/v1/public/categories*');
+    revalidateStorefront();
     res.json({ success: true, data: category });
   } catch (err) { next(err); }
 };
@@ -97,6 +103,7 @@ const deleteCategory = async (req, res, next) => {
   try {
     await Category.findByIdAndUpdate(req.params.id, { isActive: false });
     await redis.delByPattern('cache:/v1/public/categories*');
+    revalidateStorefront();
     res.json({ success: true, message: 'Category deactivated' });
   } catch (err) { next(err); }
 };
@@ -184,6 +191,7 @@ const createBanner = async (req, res, next) => {
   try {
     const banner = await Banner.create(req.body);
     await redis.delByPattern('cache:/v1/public/settings*');
+    revalidateStorefront();
     res.status(httpStatus.CREATED).json({ success: true, data: banner });
   } catch (err) { next(err); }
 };
@@ -193,6 +201,7 @@ const updateBanner = async (req, res, next) => {
     const banner = await Banner.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!banner) throw new ApiError(httpStatus.NOT_FOUND, 'Banner not found');
     await redis.delByPattern('cache:/v1/public/settings*');
+    revalidateStorefront();
     res.json({ success: true, data: banner });
   } catch (err) { next(err); }
 };
@@ -201,6 +210,7 @@ const deleteBanner = async (req, res, next) => {
   try {
     await Banner.findByIdAndDelete(req.params.id);
     await redis.delByPattern('cache:/v1/public/settings*');
+    revalidateStorefront();
     res.json({ success: true, message: 'Banner deleted' });
   } catch (err) { next(err); }
 };

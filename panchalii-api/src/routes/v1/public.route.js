@@ -1,6 +1,7 @@
 const express = require('express');
 const pub = require('../../controllers/public.controller');
 const cart = require('../../controllers/cart.controller');
+const { optionalAuth } = require('../../middlewares/auth');
 const { cacheMiddleware } = require('../../middlewares/cache');
 const router = express.Router();
 
@@ -21,9 +22,9 @@ router.get('/search', pub.search);
 router.get('/reviews/:productId', cacheMiddleware(120), pub.getProductReviews);
 
 // Cart (never cached — per-user/guest state)
-router.post('/cart/add', cart.addToCart);
-router.post('/cart/update', cart.updateCart);
-router.post('/cart/remove', cart.removeFromCart);
-router.get('/cart/:guestToken', cart.getCart);
+router.post('/cart/add', optionalAuth, cart.addToCart);
+router.post('/cart/update', optionalAuth, cart.updateCart);
+router.post('/cart/remove', optionalAuth, cart.removeFromCart);
+router.get('/cart/:guestToken', optionalAuth, cart.getCart);
 
 module.exports = router;
