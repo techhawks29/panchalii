@@ -16,26 +16,28 @@ const getClient = () => {
   return client;
 };
 
+const isReady = () => client && client.isReady;
+
 const set = async (key, value, ttlSeconds) => {
-  const c = getClient();
-  await c.set(key, JSON.stringify(value), { EX: ttlSeconds });
+  if (!isReady()) return;
+  await client.set(key, JSON.stringify(value), { EX: ttlSeconds });
 };
 
 const get = async (key) => {
-  const c = getClient();
-  const raw = await c.get(key);
+  if (!isReady()) return null;
+  const raw = await client.get(key);
   return raw ? JSON.parse(raw) : null;
 };
 
 const del = async (...keys) => {
-  const c = getClient();
-  if (keys.length) await c.del(keys);
+  if (!isReady() || !keys.length) return;
+  await client.del(keys);
 };
 
 const delByPattern = async (pattern) => {
-  const c = getClient();
-  const keys = await c.keys(pattern);
-  if (keys.length) await c.del(keys);
+  if (!isReady()) return;
+  const keys = await client.keys(pattern);
+  if (keys.length) await client.del(keys);
 };
 
 module.exports = { connect, getClient, set, get, del, delByPattern };
