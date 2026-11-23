@@ -10,7 +10,8 @@ const handleRazorpayWebhook = async (req, res) => {
   const rawBody = req.rawBody;
 
   if (!razorpayService.verifyWebhookSignature(rawBody, signature)) {
-    console.warn('[Webhook] Invalid Razorpay signature');
+    const reason = !rawBody ? 'request body not captured' : !signature ? 'no signature header' : 'signature mismatch (check webhook secret)';
+    console.warn(`[Webhook] Invalid Razorpay signature: ${reason}`);
     return;
   }
 

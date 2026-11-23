@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-const _baseUrl = 'http://localhost:4000/v1';
+// Override per build: --dart-define=API_URL=https://panchalii-api-production.up.railway.app/v1
+const _baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://localhost:4000/v1');
 const _storage = FlutterSecureStorage();
 
 Dio buildDio() {
