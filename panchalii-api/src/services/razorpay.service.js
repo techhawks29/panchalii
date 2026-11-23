@@ -22,21 +22,18 @@ const createOrder = async ({ amount, currency = 'INR', receipt, notes = {} }) =>
   return instance.orders.create({ amount: Math.round(amount * 100), currency, receipt, notes });
 };
 
-const verifySignature = (razorpayOrderId, razorpayPaymentId, razorpaySignature) => {
-  const body = `${razorpayOrderId}|${razorpayPaymentId}`;
-  const expected = crypto
-    .createHmac('sha256', config.razorpay.keySecret)
-    .update(body)
-    .digest('hex');
-  return expected === razorpaySignature;
+const hmacMatches = (secret, payload, signature) => {
+  if (!secret || !payload || typeof signature !== 'string') return false;
+  const expected = Buffer.from(crypto.createHmac('sha256', secret).update(payload).digest('hex'));
+  const given = Buffer.from(signature);
+  return expected.length === given.length && crypto.timingSafeEqual(expected, given);
 };
 
-const verifyWebhookSignature = (rawBody, signature) => {
-  const expected = crypto
-    .createHmac('sha256', config.razorpay.keySecret)
-    .update(rawBody)
-    .digest('hex');
-  return expected === signature;
-};
+const verifySignature = (razorpayOrderId, razorpayPaymentId, razorpaySignature) =>
+  hmacMatches(config.razorpay.keySecret, `${razorpayOrderId}|${razorpayPaymentId}`, razorpaySignature);
+
+// Webhooks are signed with the webhook secret set in the Razorpay dashboard, not the API key secret
+const verifyWebhookSignature = (rawBody, signature) =>
+  hmacMatches(config.razorpay.webhookSecret, rawBody, signature);
 
 module.exports = { createOrder, verifySignature, verifyWebhookSignature };

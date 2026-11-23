@@ -23,6 +23,7 @@ const envSchema = Joi.object({
 
   RAZORPAY_KEY_ID: Joi.string().allow('').default(''),
   RAZORPAY_KEY_SECRET: Joi.string().allow('').default(''),
+  RAZORPAY_WEBHOOK_SECRET: Joi.string().allow('').default(''),
 
   SMTP_HOST: Joi.string().default('smtp.gmail.com'),
   SMTP_PORT: Joi.number().default(587),
@@ -62,6 +63,7 @@ module.exports = {
   razorpay: {
     keyId: env.RAZORPAY_KEY_ID,
     keySecret: env.RAZORPAY_KEY_SECRET,
+    webhookSecret: env.RAZORPAY_WEBHOOK_SECRET,
   },
   email: {
     host: env.SMTP_HOST,

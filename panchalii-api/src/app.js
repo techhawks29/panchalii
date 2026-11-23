@@ -46,19 +46,13 @@ app.use(cors({
   credentials: true,
 }));
 
-// Raw body capture for Razorpay webhook HMAC verification
-app.use((req, res, next) => {
-  if (req.originalUrl.includes('/webhook/razorpay')) {
-    let data = '';
-    req.on('data', (chunk) => { data += chunk; });
-    req.on('end', () => { req.rawBody = data; next(); });
-  } else {
-    next();
-  }
-});
-
-// Body parsing
-app.use(express.json({ limit: '2mb' }));
+// Body parsing; keep the exact bytes for Razorpay webhook HMAC verification
+app.use(express.json({
+  limit: '2mb',
+  verify: (req, res, buf) => {
+    if (req.originalUrl.includes('/webhook/razorpay')) req.rawBody = buf;
+  },
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
