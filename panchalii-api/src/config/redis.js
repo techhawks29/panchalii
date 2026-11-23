@@ -4,8 +4,20 @@ const config = require('./config');
 let client = null;
 
 const connect = async () => {
-  client = createClient({ url: config.redis.url });
-  client.on('error', (err) => console.error('Redis error:', err));
+  if (!config.redis.url) {
+    console.log('Redis not configured (REDIS_URL unset); running without cache');
+    return null;
+  }
+  let warned = false;
+  client = createClient({
+    url: config.redis.url,
+    // Give up after a few attempts instead of retrying (and logging) forever
+    socket: { reconnectStrategy: (retries) => (retries > 5 ? false : Math.min(retries * 500, 3000)) },
+  });
+  client.on('error', (err) => {
+    if (!warned) console.error('Redis error:', err.message);
+    warned = true;
+  });
   await client.connect();
   console.log('Redis connected');
   return client;

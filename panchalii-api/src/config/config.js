@@ -9,7 +9,7 @@ const envSchema = Joi.object({
   PORT: Joi.number().default(4000),
 
   MONGODB_URL: Joi.string().required(),
-  REDIS_URL: Joi.string().default('redis://localhost:6379'),
+  REDIS_URL: Joi.string().allow('').default(''),
 
   JWT_SECRET: Joi.string().min(32).required(),
   JWT_ACCESS_EXPIRATION_MINUTES: Joi.number().default(1440),

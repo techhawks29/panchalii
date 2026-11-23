@@ -7,7 +7,7 @@ import BrandMark from './BrandMark';
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const itemCount = useCartStore((s) => s.itemCount)();
+  const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.qty, 0));
   const openCart = useCartStore((s) => s.openCart);
   const { isAuthenticated, user, clearAuth } = useAuthStore();
 
