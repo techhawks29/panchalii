@@ -27,7 +27,7 @@ const NAV = [
   { href: '/reviews', label: 'Reviews', icon: 'reviews' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ open = false, onClose }: { open?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, clearAuth } = useAdminAuthStore();
@@ -38,8 +38,17 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 h-screen sticky top-0 bg-sidebar border-r border-border flex flex-col shrink-0">
-      <div className="px-6 pt-7 pb-6 border-b border-border flex flex-col items-center">
+    <>
+    <div
+      onClick={onClose}
+      aria-hidden="true"
+      className={`lg:hidden fixed inset-0 z-40 bg-black/60 transition-opacity ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+    />
+    <aside
+      className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:w-64 lg:max-w-none lg:translate-x-0 h-screen bg-sidebar border-r border-border flex flex-col shrink-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+    >
+      <div className="relative px-6 pt-7 pb-6 border-b border-border flex flex-col items-center">
+        <button onClick={onClose} className="lg:hidden absolute right-3 top-3 p-2 text-tertiary hover:text-primary text-2xl leading-none" aria-label="Close menu">×</button>
         <BrandMark className="h-[64px] w-auto" />
         <p className="eyebrow mt-3 !text-tertiary/70">Admin</p>
       </div>
@@ -80,5 +89,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

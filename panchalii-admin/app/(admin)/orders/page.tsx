@@ -59,14 +59,14 @@ export default function OrdersPage() {
           <button
             key={s}
             onClick={() => { setStatus(s); setPage(1); }}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors capitalize ${status === s ? 'bg-primary text-ink' : 'bg-white border border-border text-tertiary hover:border-primary'}`}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors capitalize ${status === s ? 'bg-primary text-ink' : 'border border-border text-tertiary hover:border-primary hover:text-secondary'}`}
           >
             {s}
           </button>
         ))}
       </div>
 
-      <div className="card p-0 overflow-hidden">
+      <div className="card p-0 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted">
             <tr>
@@ -75,7 +75,7 @@ export default function OrdersPage() {
               <th className="text-left px-4 py-3 font-semibold text-tertiary">Amount</th>
               <th className="text-left px-4 py-3 font-semibold text-tertiary">Status</th>
               <th className="text-left px-4 py-3 font-semibold text-tertiary hidden lg:table-cell">Date</th>
-              <th className="px-4 py-3 font-semibold text-tertiary">Update</th>
+              <th className="px-4 py-3 font-semibold text-tertiary hidden sm:table-cell">Update</th>
             </tr>
           </thead>
           <tbody>
@@ -87,7 +87,7 @@ export default function OrdersPage() {
             {!isLoading && orders.map((o) => (
               <tr key={o._id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
                 <td className="px-4 py-3">
-                  <Link href={`/orders/${o._id}`} className="font-semibold text-secondary hover:text-primary">{o.orderNumber}</Link>
+                  <Link href={`/orders/${o._id}`} className="font-semibold text-secondary hover:text-primary break-all">{o.orderNumber}</Link>
                   <p className="text-xs text-tertiary line-clamp-1">{o.items.map(i => `${i.name}×${i.qty}`).join(', ')}</p>
                 </td>
                 <td className="px-4 py-3 hidden md:table-cell">
@@ -99,11 +99,11 @@ export default function OrdersPage() {
                   <span className={`badge capitalize ${statusColors[o.status] ?? 'bg-muted text-tertiary'}`}>{o.status}</span>
                 </td>
                 <td className="px-4 py-3 text-tertiary hidden lg:table-cell">{new Date(o.createdAt).toLocaleDateString('en-IN')}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 hidden sm:table-cell">
                   <select
                     value={o.status}
                     onChange={e => updateStatus.mutate({ id: o._id, newStatus: e.target.value })}
-                    className="text-xs border border-border rounded-sm px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="text-xs bg-page text-secondary border border-border rounded-sm px-2 py-1 capitalize focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {STATUSES.filter(s => s !== 'all').map(s => <option key={s} value={s} className="capitalize">{s}</option>)}
                   </select>

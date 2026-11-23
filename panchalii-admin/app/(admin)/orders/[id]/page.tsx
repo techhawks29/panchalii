@@ -59,9 +59,9 @@ export default function OrderDetailPage() {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display text-4xl text-secondary">{o.orderNumber}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 mb-6">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl sm:text-4xl text-secondary break-all">{o.orderNumber}</h1>
           <p className="text-tertiary text-sm">{new Date(o.createdAt).toLocaleString('en-IN')}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export default function OrderDetailPage() {
           {/* Update status */}
           <div className="card">
             <h2 className="font-display text-2xl font-medium text-secondary mb-3">Update Status</h2>
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
               {STATUSES.map(s => (
                 <button
                   key={s}
