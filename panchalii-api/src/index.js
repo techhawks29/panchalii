@@ -5,10 +5,13 @@ const { connect: connectRedis } = require('./config/redis');
 
 const start = async () => {
   await connectMongo();
-  await connectRedis();
 
-  app.listen(config.port, () => {
-    console.log(`Panchalii API running on port ${config.port} [${config.env}]`);
+  // Redis is used for caching only — start the server even if it's unavailable
+  connectRedis().catch((err) => console.warn('Redis unavailable, running without cache:', err.message));
+
+  const port = process.env.PORT || config.port;
+  app.listen(port, () => {
+    console.log(`Panchalii API running on port ${port} [${config.env}]`);
   });
 };
 
