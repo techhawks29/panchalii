@@ -1,0 +1,3 @@
+# Never upload macOS clippings (they have held pasted secrets)
+*.textClipping
+**/*.textClipping
