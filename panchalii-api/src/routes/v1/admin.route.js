@@ -48,5 +48,6 @@ router.delete('/coupons/:id', admin.deleteCoupon);
 // Reviews
 router.get('/reviews/pending', admin.getPendingReviews);
 router.patch('/reviews/:id/approve', admin.approveReview);
+router.delete('/reviews/:id', admin.rejectReview);
 
 module.exports = router;

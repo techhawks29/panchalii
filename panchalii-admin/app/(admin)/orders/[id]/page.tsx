@@ -9,14 +9,15 @@ interface OrderDetail {
   _id: string;
   orderNumber: string;
   user: { _id: string; name: string; email: string; phone?: string };
-  items: { product: { _id: string; name: string; images: string[]; price: number }; qty: number; price: number }[];
+  // name/image are snapshotted at purchase; product may have changed or been deleted since
+  items: { product?: { _id: string; name?: string; images?: string[] } | string; name: string; image?: string; qty: number; price: number; lineTotal?: number }[];
   address: { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string };
   subtotal: number;
-  discount: number;
-  shipping: number;
+  couponDiscount?: number;
+  shippingCharge?: number;
   total: number;
   status: string;
-  payment: { status: string; paymentId?: string };
+  payment: { status: string; razorpayPaymentId?: string; razorpayOrderId?: string };
   timeline: { status: string; note?: string; at: string }[];
   createdAt: string;
 }
@@ -29,6 +30,9 @@ const statusColors: Record<string, string> = {
   delivered: 'bg-emerald-400/10 text-emerald-300',
   cancelled: 'bg-red-400/10 text-red-300',
 };
+
+const itemImage = (item: OrderDetail['items'][number]) =>
+  item.image || (typeof item.product === 'object' ? item.product?.images?.[0] : undefined);
 
 const STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
 
@@ -75,20 +79,20 @@ export default function OrderDetailPage() {
               {o.items.map((item, i) => (
                 <div key={i} className="flex gap-3">
                   <div className="w-14 h-18 bg-muted rounded-sm overflow-hidden shrink-0 relative">
-                    {item.product?.images?.[0] && <Image src={item.product.images[0]} alt="" fill className="object-cover" />}
+                    {itemImage(item) && <Image src={itemImage(item)!} alt="" fill sizes="56px" className="object-cover" />}
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-secondary text-sm">{item.product?.name}</p>
+                    <p className="font-semibold text-secondary text-sm">{item.name || (typeof item.product === 'object' ? item.product?.name : '')}</p>
                     <p className="text-xs text-tertiary">Qty: {item.qty}</p>
-                    <p className="text-sm font-bold text-secondary">₹{(item.price * item.qty).toLocaleString('en-IN')}</p>
+                    <p className="text-sm font-bold text-secondary">₹{(item.lineTotal ?? item.price * item.qty).toLocaleString('en-IN')}</p>
                   </div>
                 </div>
               ))}
             </div>
             <div className="border-t border-border mt-4 pt-4 space-y-1 text-sm">
               <div className="flex justify-between text-tertiary"><span>Subtotal</span><span>₹{o.subtotal.toLocaleString('en-IN')}</span></div>
-              {o.discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>−₹{o.discount.toLocaleString('en-IN')}</span></div>}
-              <div className="flex justify-between text-tertiary"><span>Shipping</span><span>{o.shipping === 0 ? 'Free' : `₹${o.shipping}`}</span></div>
+              {!!o.couponDiscount && <div className="flex justify-between text-primary"><span>Discount</span><span>−₹{o.couponDiscount.toLocaleString('en-IN')}</span></div>}
+              <div className="flex justify-between text-tertiary"><span>Shipping</span><span>{o.shippingCharge ? `₹${o.shippingCharge.toLocaleString('en-IN')}` : 'Free'}</span></div>
               <div className="flex justify-between font-bold text-secondary text-base pt-2 border-t border-border"><span>Total</span><span>₹{o.total.toLocaleString('en-IN')}</span></div>
             </div>
           </div>
@@ -155,7 +159,7 @@ export default function OrderDetailPage() {
             <span className={`badge capitalize ${o.payment.status === 'paid' ? 'bg-emerald-400/10 text-emerald-300' : 'bg-amber-400/10 text-amber-300'}`}>
               {o.payment.status}
             </span>
-            {o.payment.paymentId && <p className="text-xs text-tertiary mt-2 font-mono">{o.payment.paymentId}</p>}
+            {o.payment.razorpayPaymentId && <p className="text-xs text-tertiary mt-2 font-mono">{o.payment.razorpayPaymentId}</p>}
           </div>
         </div>
       </div>

@@ -240,21 +240,33 @@ const getPendingReviews = async (req, res, next) => {
   try {
     const result = await paginate(Review, { isApproved: false }, {
       page: req.query.page || 1, limit: 20,
-      populate: [{ path: 'user', select: 'name' }, { path: 'product', select: 'name' }],
+      populate: [{ path: 'user', select: 'name email' }, { path: 'product', select: 'name images' }],
     });
     res.json({ success: true, ...result });
   } catch (err) { next(err); }
+};
+
+const refreshProductRating = async (productId) => {
+  const reviews = await Review.find({ product: productId, isApproved: true }).select('rating').lean();
+  const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+  await Product.findByIdAndUpdate(productId, { averageRating: Math.round(avg * 10) / 10, totalReviews: reviews.length });
 };
 
 const approveReview = async (req, res, next) => {
   try {
     const review = await Review.findByIdAndUpdate(req.params.id, { isApproved: true }, { new: true });
     if (!review) throw new ApiError(httpStatus.NOT_FOUND, 'Review not found');
-    // Update product rating averages
-    const reviews = await Review.find({ product: review.product, isApproved: true }).lean();
-    const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
-    await Product.findByIdAndUpdate(review.product, { averageRating: Math.round(avg * 10) / 10, totalReviews: reviews.length });
+    await refreshProductRating(review.product);
     res.json({ success: true, data: review });
+  } catch (err) { next(err); }
+};
+
+const rejectReview = async (req, res, next) => {
+  try {
+    const review = await Review.findByIdAndDelete(req.params.id);
+    if (!review) throw new ApiError(httpStatus.NOT_FOUND, 'Review not found');
+    await refreshProductRating(review.product);
+    res.json({ success: true });
   } catch (err) { next(err); }
 };
 
@@ -319,6 +331,6 @@ module.exports = {
   getUsers, toggleUserStatus,
   getBanners, createBanner, updateBanner, deleteBanner,
   getCoupons, createCoupon, updateCoupon, deleteCoupon,
-  getPendingReviews, approveReview,
+  getPendingReviews, approveReview, rejectReview,
   getAnalytics,
 };

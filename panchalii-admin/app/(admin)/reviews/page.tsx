@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { toast } from 'sonner';
-import { apiGet, apiPatch } from '../../../lib/api';
+import { apiDelete, apiGet, apiPatch } from '../../../lib/api';
 
 interface Review {
   _id: string;
@@ -21,17 +21,17 @@ export default function ReviewsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-reviews'],
-    queryFn: () => apiGet<{ data: Review[] }>('/admin/reviews?approved=false'),
+    queryFn: () => apiGet<{ data: Review[] }>('/admin/reviews/pending'),
   });
 
   const approveMutation = useMutation({
-    mutationFn: (id: string) => apiPatch(`/admin/reviews/${id}/approve`, { isApproved: true }),
+    mutationFn: (id: string) => apiPatch(`/admin/reviews/${id}/approve`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-reviews'] }); toast.success('Review approved'); },
     onError: (err: Error) => toast.error(err.message),
   });
 
   const rejectMutation = useMutation({
-    mutationFn: (id: string) => apiPatch(`/admin/reviews/${id}/approve`, { isApproved: false }),
+    mutationFn: (id: string) => apiDelete(`/admin/reviews/${id}`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-reviews'] }); toast.success('Review rejected'); },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -92,7 +92,7 @@ export default function ReviewsPage() {
               <button onClick={() => approveMutation.mutate(r._id)} disabled={approveMutation.isPending} className="btn-primary text-sm py-2">
                 ✓ Approve
               </button>
-              <button onClick={() => rejectMutation.mutate(r._id)} disabled={rejectMutation.isPending} className="btn-danger text-sm py-2">
+              <button onClick={() => { if (window.confirm('Reject and permanently delete this review?')) rejectMutation.mutate(r._id); }} disabled={rejectMutation.isPending} className="btn-danger text-sm py-2">
                 ✗ Reject
               </button>
             </div>
